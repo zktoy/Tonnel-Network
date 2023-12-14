@@ -102,7 +102,7 @@ export class JettonMinter implements Contract {
       value: opts.value,
       sendMode: SendMode.PAY_GAS_SEPARATELY,
       body: beginCell()
-        .storeUint(5, 32)
+        .storeUint(5, 32) //5 ;; add minter
         .storeUint(opts.queryId, 64)
         .storeAddress(opts.mintAccess)
         .endCell(),

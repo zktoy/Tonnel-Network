@@ -12,8 +12,8 @@ import {ERRORS, TonnelJetton} from "../wrappers/TonnelJetton";
 import {JettonWallet} from "../wrappers/JettonWallet";
 import {parseG1Func, parseG2Func} from "./Tonnel.spec";
 
-const wasmPath = path.join(__dirname, "../build/circuits/circuit_v2.wasm");
-const zkeyPath = path.join(__dirname, "../build/circuits/circuit_final_v2.zkey");
+const wasmPath = path.join(__dirname, "../build/circuits/circuit.wasm");
+const zkeyPath = path.join(__dirname, "../build/circuits/circuit_final.zkey");
 
 const fee = 0.02;
 const pool_size = 2000;

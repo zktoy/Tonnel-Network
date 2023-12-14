@@ -13,7 +13,7 @@
 
 # constants
 TARGET_CIRCUIT=../../circuits/withdraw.circom
-PTAU_FILE=../../scripts/pot21_final.ptau
+PTAU_FILE=../../scripts/pot22_final.ptau
 ENTROPY_FOR_ZKEY=mnbvc
 
 cd "$(dirname "$0")"
@@ -39,17 +39,17 @@ circom $TARGET_CIRCUIT --r1cs circuit.r1cs --wasm circuit.wasm --prime bls12381 
 # you can either download $PTAU_FILE or generate it by yourself
 
 ##### Genereate:
-#snarkjs powersoftau new bls12-381 14 pot14_0000.ptau -v
-#snarkjs powersoftau contribute pot14_0000.ptau pot14_0001.ptau --name="First contribution" -v
-#snarkjs powersoftau contribute pot14_0001.ptau pot14_0002.ptau --name="Second contribution" -v -e="some random text"
+#nohup snarkjs powersoftau new bls12-381 22 pot22_0000.ptau -v &
+#snarkjs powersoftau contribute pot22_0000.ptau pot22_0001.ptau --name="First contribution" -v
+#nohup snarkjs powersoftau contribute pot22_0001.ptau pot22_0002.ptau --name="Second contribution" -v -e="some random text" &
 #echo 'beacon'
-#snarkjs powersoftau beacon pot14_0002.ptau pot14_beacon.ptau 0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f 10 -n="Final Beacon"
+#nohup snarkjs powersoftau beacon pot22_0002.ptau pot22_beacon.ptau 0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f 10 -n="Final Beacon" &
 #echo 'prepare phase2'
 #
-#snarkjs powersoftau prepare phase2 pot14_beacon.ptau pot14_final.ptau -v
+#nohup snarkjs powersoftau prepare phase2 pot22_beacon.ptau pot22_final.ptau -v &
 #
 #
-#snarkjs powersoftau verify pot14_final.ptau
+#snarkjs powersoftau verify pot22_final.ptau
 
 #######
 # download:

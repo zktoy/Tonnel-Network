@@ -133,3 +133,6 @@ dist
 
 build/transfer circom/circuit_final.zkey
 temp
+build/circuits/circuit_final.zkey
+scripts/pot22_final.ptau
+tests/test_data.ts

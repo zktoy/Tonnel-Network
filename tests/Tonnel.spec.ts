@@ -12,6 +12,10 @@ import {JettonMinter} from "../wrappers/JettonMinter";
 import {JettonWallet} from "../wrappers/JettonWallet";
 import exp = require("constants");
 
+import * as testData from './test_data';
+import {buildBls12381, utils} from "ffjavascript";
+const {unstringifyBigInts} = utils;
+
 const wasmPath = path.join(__dirname, "../build/circuits/circuit.wasm");
 const zkeyPath = path.join(__dirname, "../build/circuits/circuit_final.zkey");
 
@@ -286,6 +290,100 @@ describe('Tonnel', () => {
 
   });
 
+  function reformatVerificationKeyGroth16(curve, verificationKey) {
+    const vk_verifier = unstringifyBigInts(verificationKey);
+
+    verificationKey.vk_alpha_1 = g1Compressed(curve, vk_verifier.vk_alpha_1);
+    verificationKey.vk_alpha_1_array = g1Compressed_to_array(curve, vk_verifier.vk_alpha_1);
+    verificationKey.vk_beta_2 = g2Compressed(curve, vk_verifier.vk_beta_2);
+    verificationKey.vk_beta_2_array = g2Compressed_to_array(curve, vk_verifier.vk_beta_2);
+    verificationKey.vk_gamma_2 = g2Compressed(curve, vk_verifier.vk_gamma_2);
+    verificationKey.vk_gamma_2_array = g2Compressed_to_array(curve, vk_verifier.vk_gamma_2);
+    verificationKey.vk_delta_2 = g2Compressed(curve, vk_verifier.vk_delta_2);
+    verificationKey.vk_delta_2_array = g2Compressed_to_array(curve, vk_verifier.vk_delta_2);
+    let arr = vk_verifier.IC.map(x => g1Compressed(curve, x));
+    verificationKey.IC = arr;
+    verificationKey.IC_array = vk_verifier.IC.map(x => g1Compressed_to_array(curve, x));
+    return verificationKey;
+  }
+  function g1Compressed(curve, p1Raw) {
+      let p1 = curve.G1.fromObject(p1Raw);
+  
+      let buff = new Uint8Array(48);
+      curve.G1.toRprCompressed(buff, 0, p1);
+      // console.log(" > p1Raw = ", p1Raw)
+      // console.log(" > p1 = ", p1)
+      // console.log(" > buff = ", buff)
+      // convert from ffjavascript to blst format
+      if (buff[0] & 0x80) {
+          buff[0] |= 32;
+      }
+      buff[0] |= 0x80;
+      // console.log(" > buff* = ", buff)
+      return toHexString(buff);
+  }
+  function g1Compressed_to_array(curve, p1Raw) {
+    let p1 = curve.G1.fromObject(p1Raw);
+
+    let buff = new Uint8Array(48);
+    curve.G1.toRprCompressed(buff, 0, p1);
+    // console.log(" > p1Raw = ", p1Raw)
+    // console.log(" > p1 = ", p1)
+    // console.log(" > buff = ", buff)
+    // convert from ffjavascript to blst format
+    if (buff[0] & 0x80) {
+        buff[0] |= 32;
+    }
+    buff[0] |= 0x80;
+    // console.log(" > buff* = ", buff)
+    return toBigIntArray(buff, 8); //split as 8 slices
+  }
+    
+  function g2Compressed(curve, p2Raw) {
+      let p2 = curve.G2.fromObject(p2Raw);
+  
+      let buff = new Uint8Array(96);
+      curve.G2.toRprCompressed(buff, 0, p2);
+      // convert from ffjavascript to blst format
+      if (buff[0] & 0x80) {
+          buff[0] |= 32;
+      }
+      buff[0] |= 0x80;
+      return toHexString(buff);
+  }
+
+  function g2Compressed_to_array(curve, p2Raw) {
+    let p2 = curve.G2.fromObject(p2Raw);
+
+    let buff = new Uint8Array(96);
+    curve.G2.toRprCompressed(buff, 0, p2);
+    // convert from ffjavascript to blst format
+    if (buff[0] & 0x80) {
+        buff[0] |= 32;
+    }
+    buff[0] |= 0x80;
+    return toBigIntArray(buff, 8); //split as 8 slices
+  }
+    
+  function toHexString(byteArray) {
+      return Array.from(byteArray, function (byte: any) {
+          return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+      }).join("");
+  }
+  function toBigIntArray(byteArray, nSlices) {
+    var len = byteArray.length;
+    expect(len % nSlices).toEqual(0);
+    var chunkSize = len / nSlices;
+    var results = [''];
+    for (let i =0; i < len; i += chunkSize) {
+      const chunk = byteArray.slice(i, i + chunkSize);
+      const dec = BigInt('0x' + toHexString(chunk));
+      console.log('ZYD:', dec.toString());
+      results.push(dec.toString());
+    }
+    return results;
+  }
+
   it('should init Merkle and then deposit and then withdraw', async () => {
     await merkleInitialize();
     const tree = new MerkleTree(20);
@@ -392,6 +490,14 @@ describe('Tonnel', () => {
       pathElements: merkleProof.pathElements,
       pathIndices: merkleProof.pathIndices,
     };
+
+    // get the eliptic curve first
+    let curve = await buildBls12381();
+
+    let verification_key = testData.verification_key;
+    console.log('verification_key = ', verification_key);
+    let verifier_key = reformatVerificationKeyGroth16(curve, verification_key);
+    console.log('verifier_key = ', verifier_key);
 
 
     let {proof, publicSignals} = await groth16.fullProve(input, wasmPath, zkeyPath);
